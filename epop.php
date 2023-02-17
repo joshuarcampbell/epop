@@ -440,29 +440,34 @@ function epop_save_template($template_id, $template_name, $template_subject, $te
     wp_die('Unauthorized access');
   }
   
-  $table_name = $wpdb->prefix . 'epop_templates';
+ $table_name = $wpdb->prefix . 'epop_templates';
 
-  // Check if template already exists
-  $template = $wpdb->get_row( $wpdb->prepare("SELECT * FROM $table_name WHERE template_id = %d", $template_id) );
+    $name = esc_sql($data['name']);
+    $subject = esc_sql($data['subject']);
+    $body = esc_sql($data['body']);
+    $id = absint($data['id']);
 
-  if ( $template ) {
-    // Template already exists, update the record
-    $wpdb->update( $table_name, array(
-      'template_name' => $template_name,
-      'template_subject' => $template_subject,
-      'template_body' => $template_body
-    ), array( 'template_id' => $template_id ) );
-  } else {
-    // Template doesn't exist, insert new record
-    $wpdb->insert( $table_name, array(
-      'template_id' => $template_id,
-      'template_name' => $template_name,
-      'template_subject' => $template_subject,
-      'template_body' => $template_body
-    ) );
-  }
+    if ($id) {
+        $wpdb->update(
+            $table_name,
+            array(
+                'name' => $name,
+                'subject' => $subject,
+                'body' => $body
+            ),
+            array('id' => $id)
+        );
+    } else {
+        $wpdb->insert(
+            $table_name,
+            array(
+                'name' => $name,
+                'subject' => $subject,
+                'body' => $body
+            )
+        );
+    }
 }
-
 
 
 
