@@ -396,3 +396,26 @@ function epop_display_template_list() {
     echo '</tbody>';
     echo '</table>';
 }
+
+function epop_save_template() {
+    if (isset($_POST['epop_template_submit'])) {
+        // Sanitize and validate the input data
+        $template_name = sanitize_text_field($_POST['epop_template_name']);
+        $template_subject = sanitize_text_field($_POST['epop_template_subject']);
+        $template_body = sanitize_textarea_field($_POST['epop_template_body']);
+
+        // Insert the template into the database
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'epop_templates';
+        $wpdb->insert($table_name, array(
+            'template_name' => $template_name,
+            'template_subject' => $template_subject,
+            'template_body' => $template_body
+        ));
+
+        // Redirect the user back to the template list page
+        $redirect_url = admin_url('admin.php?page=epop_templates');
+        wp_redirect($redirect_url);
+        exit;
+    }
+}
