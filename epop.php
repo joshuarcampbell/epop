@@ -407,25 +407,35 @@ function epop_nonce_verification($action = 'epop_save_template') {
 /**
  * Save the template data when a template is added or updated
  */
-function epop_save_template($template_data) {
-    global $wpdb;
+function epop_save_template($template_id, $template_name, $template_subject, $template_body) {
+  global $wpdb;
+  
+  // Verify nonce
+  if ( !isset($_POST['epop_nonce']) || !wp_verify_nonce($_POST['epop_nonce'], 'epop_template_nonce') ) {
+    wp_die('Unauthorized access');
+  }
+  
+  $table_name = $wpdb->prefix . 'epop_templates';
 
-    // Check if a template with the same name already exists
-    $template_exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . $wpdb->prefix . "epop_templates WHERE name=%s", $template_data['name']));
+  // Check if template already exists
+  $template = $wpdb->get_row( $wpdb->prepare("SELECT * FROM $table_name WHERE template_id = %d", $template_id) );
 
-    // If the template already exists, update it. Otherwise, insert a new one.
-    if ($template_exists) {
-        $wpdb->update($wpdb->prefix . 'epop_templates', array(
-            'subject' => $template_data['subject'],
-            'body' => $template_data['body'],
-        ), array('name' => $template_data['name']));
-    } else {
-        $wpdb->insert($wpdb->prefix . 'epop_templates', array(
-            'name' => $template_data['name'],
-            'subject' => $template_data['subject'],
-            'body' => $template_data['body'],
-        ));
-    }
+  if ( $template ) {
+    // Template already exists, update the record
+    $wpdb->update( $table_name, array(
+      'template_name' => $template_name,
+      'template_subject' => $template_subject,
+      'template_body' => $template_body
+    ), array( 'template_id' => $template_id ) );
+  } else {
+    // Template doesn't exist, insert new record
+    $wpdb->insert( $table_name, array(
+      'template_id' => $template_id,
+      'template_name' => $template_name,
+      'template_subject' => $template_subject,
+      'template_body' => $template_body
+    ) );
+  }
 }
 
 
@@ -439,12 +449,12 @@ function epop_add_template() {
     global $wpdb;
 
     $template_name = isset( $_POST['template_name'] ) ? sanitize_text_field( $_POST['template_name'] ) : '';
-    $subject = isset( $_POST['subject'] ) ? sanitize_text_field( $_POST['subject'] ) : '';
-    $body = isset( $_POST['body'] ) ? wp_kses_post( $_POST['body'] ) : '';
-
+    $subject = isset( $_POST['template_subject'] ) ? sanitize_text_field( $_POST['template_subject'] ) : '';
+    $body = isset( $_POST['template_body'] ) ? wp_kses_post( $_POST['template_body'] ) : '';
+	echo $body;
     // Insert the template data into the database
     $wpdb->insert(
-        "{$wpdb->prefix}epop_templates",
+        "{$wpdb->prefix}epop_email_templates",
         array(
             'template_name' => $template_name,
             'subject' => $subject,
@@ -458,7 +468,7 @@ function epop_add_template() {
     );
 
     // Redirect to the template list page
-    wp_redirect( admin_url( 'admin.php?page=epop-templates' ) );
+    //wp_redirect( admin_url( 'admin.php?page=epop-admin-menu' ) );
     exit();
 }
 
