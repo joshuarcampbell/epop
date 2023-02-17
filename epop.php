@@ -447,8 +447,8 @@ function epop_save_template($template_data) {
         $wpdb->update(
             $table_name,
             array(
-                'template_subject' => $template_subject,
-                'template_body' => $template_body
+                'subject' => $template_subject,
+                'body' => $template_body
             ),
             array('id' => $existing_template)
         );
@@ -458,8 +458,8 @@ function epop_save_template($template_data) {
             $table_name,
             array(
                 'template_name' => $template_name,
-                'template_subject' => $template_subject,
-                'template_body' => $template_body
+                'subject' => $template_subject,
+                'body' => $template_body
             )
         );
         return $wpdb->insert_id;
