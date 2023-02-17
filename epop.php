@@ -414,9 +414,9 @@ function epop_save_template()
     if (isset($_POST['submit'])) {
         
         $template_id = isset($_POST['template_id']) ? $_POST['template_id'] : '';
-        $name = isset($_POST['name']) ? $_POST['name'] : '';
-        $subject = isset($_POST['subject']) ? $_POST['subject'] : '';
-        $body = isset($_POST['body']) ? $_POST['body'] : '';
+        $name = isset($_POST['template_name']) ? $_POST['template_name'] : '';
+        $subject = isset($_POST['template_subject']) ? $_POST['template_subject'] : '';
+        $body = isset($_POST['template_body']) ? $_POST['template_body'] : '';
         
         if (empty($name) || empty($subject) || empty($body)) {
             echo "Name, Subject, and Body fields are required.";
