@@ -358,3 +358,41 @@ function epop_admin_menu_callback() {
     </div>
     <?php
 }
+
+function epop_display_template_list() {
+    global $wpdb;
+
+    // Retrieve the templates from the database
+    $table_name = $wpdb->prefix . 'epop_templates';
+    $templates = $wpdb->get_results("SELECT * FROM $table_name");
+
+    // If there are no templates, display a message
+    if (empty($templates)) {
+        echo '<p>No templates found.</p>';
+        return;
+    }
+
+    // Display the list of templates
+    echo '<table class="widefat">';
+    echo '<thead>';
+    echo '<tr>';
+    echo '<th>Template Name</th>';
+    echo '<th>Actions</th>';
+    echo '</tr>';
+    echo '</thead>';
+    echo '<tbody>';
+
+    foreach ($templates as $template) {
+        echo '<tr>';
+        echo '<td>' . esc_html($template->template_name) . '</td>';
+        echo '<td>';
+        echo '<a href="' . esc_url(admin_url('admin.php?page=epop_templates&action=edit&id=' . $template->id)) . '">Edit</a>';
+        echo '&nbsp;|&nbsp;';
+        echo '<a href="' . esc_url(admin_url('admin.php?page=epop_templates&action=delete&id=' . $template->id)) . '">Delete</a>';
+        echo '</td>';
+        echo '</tr>';
+    }
+
+    echo '</tbody>';
+    echo '</table>';
+}
