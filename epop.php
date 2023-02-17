@@ -336,3 +336,25 @@ function epop_display_template_form() {
     </div>
     <?php
 }
+
+/**
+ * Callback function for the EPOP menu page.
+ */
+function epop_admin_menu_callback() {
+    ?>
+    <div class="wrap">
+        <h1><?php esc_html_e( 'Email Templates', 'epop' ); ?></h1>
+        <?php settings_errors(); ?>
+        <div id="epop-templates">
+            <?php
+            if ( isset( $_GET['action'] ) && $_GET['action'] === 'edit' && isset( $_GET['template_id'] ) ) {
+                $template_id = absint( $_GET['template_id'] );
+                epop_display_template_form( $template_id );
+            } else {
+                epop_display_template_list();
+            }
+            ?>
+        </div>
+    </div>
+    <?php
+}
