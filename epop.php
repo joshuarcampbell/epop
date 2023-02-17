@@ -396,6 +396,13 @@ function epop_display_template_list() {
     echo '</table>';
 }
 
+function epop_nonce_verification($action = 'epop_save_template') {
+    $nonce = $_REQUEST['_wpnonce'] ?? '';
+    if (!wp_verify_nonce($nonce, $action)) {
+        wp_die('Invalid nonce');
+    }
+}
+
 // Save template data to database
 /**
  * Save the template data when a template is added or updated
@@ -403,22 +410,19 @@ function epop_display_template_list() {
 function epop_save_template() {
     global $wpdb;
 
-    if (!current_user_can('manage_options')) {
-        return;
-    }
+    if (isset($_POST['template_name']) && isset($_POST['template_subject']) && isset($_POST['template_body']) && epop_nonce_verification()) {
+        $template_name = sanitize_text_field($_POST['template_name']);
+        $template_subject = sanitize_text_field($_POST['template_subject']);
+        $template_body = sanitize_textarea_field($_POST['template_body']);
 
-    if (isset($_POST['epop_template_name']) && isset($_POST['epop_template_subject']) && isset($_POST['epop_template_body'])) {
-        $template_name = sanitize_text_field($_POST['epop_template_name']);
-        $template_subject = sanitize_text_field($_POST['epop_template_subject']);
-        $template_body = wp_kses_post($_POST['epop_template_body']);
-
-        $data = array(
-            'name' => $template_name,
-            'subject' => $template_subject,
-            'body' => $template_body,
+        $wpdb->insert(
+            $wpdb->prefix . 'epop_templates',
+            array(
+                'template_name' => $template_name,
+                'template_subject' => $template_subject,
+                'template_body' => $template_body
+            )
         );
-
-        $wpdb->insert($wpdb->prefix . 'epop_templates', $data, array('%s', '%s', '%s'));
     }
 }
 
