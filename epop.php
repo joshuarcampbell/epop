@@ -430,9 +430,9 @@ function epop_save_template()
         );
         
         if (!empty($template_id)) {
-            $wpdb->update($wpdb->prefix . 'epop_templates', $data, array('id' => $template_id));
+            $wpdb->update($wpdb->prefix . 'epop_email_templates', $data, array('id' => $template_id));
         } else {
-            $wpdb->insert($wpdb->prefix . 'epop_templates', $data);
+            $wpdb->insert($wpdb->prefix . 'epop_email_templates', $data);
         }
         
         echo "Template saved.";
