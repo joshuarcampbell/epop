@@ -290,43 +290,68 @@ if ( isset( $_GET['action'] ) && $_GET['action'] === 'edit' && isset( $_GET['id'
  *
  * @param WP_Post|null $template The template being edited. If null, a new template is being added.
  */
-function epop_display_template_form($template = null) {
-    // set defaults
+function epop_display_template_form($template_id = null)
+{
+    global $wpdb;
+
+    // Initialize variables
     $name = '';
     $subject = '';
     $body = '';
-    $id = '';
+    $action = 'epop_add_template';
 
-    if ($template) {
-        $name = $template->name;
-        $subject = $template->subject;
-        $body = $template->body;
-        $id = $template->id;
+    // Check if we are updating an existing template
+    if (!empty($template_id)) {
+        $template = $wpdb->get_row($wpdb->prepare(
+            "SELECT name, subject, body FROM {$wpdb->prefix}epop_templates WHERE id = %d",
+            $template_id
+        ));
+        if ($template) {
+            $name = $template->name;
+            $subject = $template->subject;
+            $body = $template->body;
+            $action = 'epop_update_template';
+        }
     }
+
+    // Output the form
     ?>
-    <form method="post" action="admin-post.php">
-        <table class="form-table">
-            <tbody>
-                <tr>
-                    <th scope="row"><label for="name"><?php _e('Name', 'epop'); ?> *</label></th>
-                    <td><input name="template_name" type="text" id="name" value="<?php echo esc_attr($name); ?>" class="regular-text" requried></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="subject"><?php _e('Subject', 'epop'); ?> *</label></th>
-                    <td><input name="template_subject" type="text" id="subject" value="<?php echo esc_attr($subject); ?>" class="regular-text" required></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="body"><?php _e('Body', 'epop'); ?> *</label></th>
-                    <td><?php wp_editor($body, 'body', ['textarea_name' => 'template_body']); ?></td>
-                </tr>
-            </tbody>
-        </table>
-        <input type="hidden" name="id" value="<?php echo esc_attr($id); ?>">
+    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
         <?php wp_nonce_field('epop_save_template', 'epop_template_nonce'); ?>
-        <?php submit_button(__('Save', 'epop'), 'primary', 'submit_template'); ?>
+        <input type="hidden" name="action" value="<?php echo $action; ?>">
+        <input type="hidden" name="template_id" value="<?php echo $template_id; ?>">
+        <table class="form-table">
+            <tr valign="top">
+                <th scope="row">
+                    <label for="name"><?php _e('Template Name:', 'epop'); ?></label>
+                </th>
+                <td>
+                    <input type="text" name="name" id="name" value="<?php echo esc_attr($name); ?>" class="regular-text">
+                </td>
+            </tr>
+            <tr valign="top">
+                <th scope="row">
+                    <label for="subject"><?php _e('Email Subject:', 'epop'); ?></label>
+                </th>
+                <td>
+                    <input type="text" name="subject" id="subject" value="<?php echo esc_attr($subject); ?>" class="regular-text">
+                </td>
+            </tr>
+            <tr valign="top">
+                <th scope="row">
+                    <label for="body"><?php _e('Email Body:', 'epop'); ?></label>
+                </th>
+                <td>
+                    <?php wp_editor(htmlspecialchars_decode($body), 'body'); ?>
+                </td>
+            </tr>
+        </table>
+        <?php submit_button(__('Save Template', 'epop'), 'primary', 'submit', false); ?>
     </form>
     <?php
-} 
+}
+
+
 
 
 
