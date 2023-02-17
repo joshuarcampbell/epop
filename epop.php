@@ -432,42 +432,40 @@ function epop_nonce_verification($action = 'epop_save_template') {
 /**
  * Save the template data when a template is added or updated
  */
-function epop_save_template($template_id, $template_name, $template_subject, $template_body) {
-  global $wpdb;
-  
-  // Verify nonce
-  if ( !isset($_POST['epop_nonce']) || !wp_verify_nonce($_POST['epop_nonce'], 'epop_template_nonce') ) {
-    wp_die('Unauthorized access');
-  }
-  
- $table_name = $wpdb->prefix . 'epop_templates';
+function epop_save_template($template_data) {
+    
+	global $wpdb;
 
-    $name = esc_sql($data['name']);
-    $subject = esc_sql($data['subject']);
-    $body = esc_sql($data['body']);
-    $id = absint($data['id']);
+    $table_name = $wpdb->prefix . 'epop_templates';
+    $template_name = $template_data['template_name'];
+    $template_subject = $template_data['template_subject'];
+    $template_body = $template_data['template_body'];
 
-    if ($id) {
+    $existing_template = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE template_name = %s", $template_name));
+
+    if ($existing_template) {
         $wpdb->update(
             $table_name,
             array(
-                'name' => $name,
-                'subject' => $subject,
-                'body' => $body
+                'template_subject' => $template_subject,
+                'template_body' => $template_body
             ),
-            array('id' => $id)
+            array('id' => $existing_template)
         );
+        return $existing_template;
     } else {
         $wpdb->insert(
             $table_name,
             array(
-                'name' => $name,
-                'subject' => $subject,
-                'body' => $body
+                'template_name' => $template_name,
+                'template_subject' => $template_subject,
+                'template_body' => $template_body
             )
         );
+        return $wpdb->insert_id;
     }
 }
+
 
 
 
