@@ -337,26 +337,26 @@ function epop_display_template_form() {
     <?php
 }
 
+function epop_admin_init() {
+    add_submenu_page(
+        'options-general.php',
+        'Email Templates',
+        'Email Templates',
+        'manage_options',
+        'epop',
+        'epop_admin_menu_callback'
+    );
+}
+add_action('admin_menu', 'epop_admin_init');
+
+
 /**
  * Callback function for the EPOP menu page.
  */
+// Callback function for the submenu page
 function epop_admin_menu_callback() {
-    ?>
-    <div class="wrap">
-        <h1><?php esc_html_e( 'Email Templates', 'epop' ); ?></h1>
-        <?php settings_errors(); ?>
-        <div id="epop-templates">
-            <?php
-            if ( isset( $_GET['action'] ) && $_GET['action'] === 'edit' && isset( $_GET['template_id'] ) ) {
-                $template_id = absint( $_GET['template_id'] );
-                epop_display_template_form( $template_id );
-            } else {
-                epop_display_template_list();
-            }
-            ?>
-        </div>
-    </div>
-    <?php
+    $templates = epop_get_templates();
+    epop_display_template_list($templates);
 }
 
 function epop_display_template_list() {
@@ -397,28 +397,21 @@ function epop_display_template_list() {
     echo '</table>';
 }
 
+// Save template data to database
 function epop_save_template() {
-    if (isset($_POST['epop_template_submit'])) {
-        // Sanitize and validate the input data
-        $template_name = sanitize_text_field($_POST['epop_template_name']);
-        $template_subject = sanitize_text_field($_POST['epop_template_subject']);
-        $template_body = sanitize_textarea_field($_POST['epop_template_body']);
-
-        // Insert the template into the database
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'epop_templates';
-        $wpdb->insert($table_name, array(
-            'template_name' => $template_name,
-            'template_subject' => $template_subject,
-            'template_body' => $template_body
-        ));
-
-        // Redirect the user back to the template list page
-        $redirect_url = admin_url('admin.php?page=epop_templates');
-        wp_redirect($redirect_url);
-        exit;
-    }
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'epop_templates';
+    $data = array(
+        'template_name' => sanitize_text_field($_POST['template_name']),
+        'subject' => sanitize_text_field($_POST['subject']),
+        'body' => wp_kses_post($_POST['body'])
+    );
+    $wpdb->insert($table_name, $data);
 }
+if (isset($_POST['epop_save_template'])) {
+    epop_save_template();
+}
+
 function epop_add_template() {
     global $wpdb;
 
@@ -444,4 +437,15 @@ function epop_add_template() {
     // Redirect to the template list page
     wp_redirect( admin_url( 'admin.php?page=epop-templates' ) );
     exit();
+}
+
+function epop_get_templates() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'epop_templates';
+
+    $query = "SELECT * FROM $table_name ORDER BY id DESC";
+    $results = $wpdb->get_results($query);
+
+    return $results;
 }
