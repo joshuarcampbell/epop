@@ -407,24 +407,38 @@ function epop_nonce_verification($action = 'epop_save_template') {
 /**
  * Save the template data when a template is added or updated
  */
-function epop_save_template() {
+function epop_save_template()
+{
     global $wpdb;
-
-    if (isset($_POST['template_name']) && isset($_POST['template_subject']) && isset($_POST['template_body']) && epop_nonce_verification()) {
-        $template_name = sanitize_text_field($_POST['template_name']);
-        $template_subject = sanitize_text_field($_POST['template_subject']);
-        $template_body = sanitize_textarea_field($_POST['template_body']);
-
-        $wpdb->insert(
-            $wpdb->prefix . 'epop_templates',
-            array(
-                'template_name' => $template_name,
-                'template_subject' => $template_subject,
-                'template_body' => $template_body
-            )
+    
+    if (isset($_POST['submit'])) {
+        
+        $template_id = isset($_POST['template_id']) ? $_POST['template_id'] : '';
+        $name = isset($_POST['name']) ? $_POST['name'] : '';
+        $subject = isset($_POST['subject']) ? $_POST['subject'] : '';
+        $body = isset($_POST['body']) ? $_POST['body'] : '';
+        
+        if (empty($name) || empty($subject) || empty($body)) {
+            echo "Name, Subject, and Body fields are required.";
+            return;
+        }
+        
+        $data = array(
+            'name' => $name,
+            'subject' => $subject,
+            'body' => $body
         );
+        
+        if (!empty($template_id)) {
+            $wpdb->update($wpdb->prefix . 'epop_templates', $data, array('id' => $template_id));
+        } else {
+            $wpdb->insert($wpdb->prefix . 'epop_templates', $data);
+        }
+        
+        echo "Template saved.";
     }
 }
+
 
 
 add_action('admin_post_epop_save_template', 'epop_save_template');
