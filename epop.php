@@ -362,7 +362,7 @@ function epop_display_template_list() {
     global $wpdb;
 
     // Retrieve the templates from the database
-    $table_name = $wpdb->prefix . 'epop_templates';
+    $table_name = $wpdb->prefix . 'epop_email_templates';
     $templates = $wpdb->get_results("SELECT * FROM $table_name");
 
     // If there are no templates, display a message
