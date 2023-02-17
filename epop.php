@@ -146,8 +146,11 @@ if ( $send_email && ! empty( $publicist_name ) && ! empty( $publicist_email ) &&
 add_action( 'publish_post', 'epop_send_email' );
 
 function epop_admin_menu() {
-add_menu_page( 'EPOP Email Templates', 'EPOP Email Templates', 'manage_options', 'epop-email-templates', 'epop_email_templates_page' );
+    add_menu_page( 'EPOP', 'EPOP', 'manage_options', 'epop-admin-menu', 'epop_admin_menu_callback' );
+    add_submenu_page( 'epop-admin-menu', 'EPOP Templates', 'Templates', 'manage_options', 'epop-admin-menu', 'epop_admin_menu_callback' );
+    add_submenu_page( 'epop-admin-menu', 'Add New Template', 'Add New', 'manage_options', 'epop-add-new', 'epop_display_template_form' );
 }
+
 add_action( 'admin_menu', 'epop_admin_menu' );
 
 function epop_email_templates_page() {
