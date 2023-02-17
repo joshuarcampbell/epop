@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function epop_create_email_templates_table() {
     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'epop_email_templates';
+    $table_name = $wpdb->prefix . 'epop_templates';
 
     $sql = "CREATE TABLE $table_name (
                 id INT(11) NOT NULL AUTO_INCREMENT,
@@ -50,7 +50,7 @@ function epop_render_meta_box( $post ) {
     global $wpdb;
 
     // Get the email templates from the database
-    $email_templates = $wpdb->get_results( "SELECT id, template_name FROM {$wpdb->prefix}epop_email_templates" );
+    $email_templates = $wpdb->get_results( "SELECT id, template_name FROM {$wpdb->prefix}epop_templates" );
 
     // Output the HTML for the meta box
     ?>
@@ -122,7 +122,7 @@ $template_id = get_post_meta( $post_id, 'email_template', true );
 if ( $send_email && ! empty( $publicist_name ) && ! empty( $publicist_email ) && ! empty( $client_name ) && ! empty( $template_id ) ) {
     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'epop_email_templates';
+    $table_name = $wpdb->prefix . 'epop_templates';
 
     $template = $wpdb->get_row( $wpdb->prepare( "SELECT subject, body FROM $table_name WHERE id = %d", $template_id ) );
 
@@ -156,7 +156,7 @@ add_action( 'admin_menu', 'epop_admin_menu' );
 function epop_email_templates_page() {
 global $wpdb;
 
-$table_name = $wpdb->prefix . 'epop_email_templates';
+$table_name = $wpdb->prefix . 'epop_templates';
 
 if ( isset( $_POST['action'] ) && $_POST['action'] === 'save_template' ) {
     $id = absint( $_POST['id'] );
@@ -387,7 +387,7 @@ function epop_display_template_list() {
     global $wpdb;
 
     // Retrieve the templates from the database
-    $table_name = $wpdb->prefix . 'epop_email_templates';
+    $table_name = $wpdb->prefix . 'epop_templates';
     $templates = $wpdb->get_results("SELECT * FROM $table_name");
 
     // If there are no templates, display a message
@@ -479,7 +479,7 @@ function epop_add_template() {
 	echo $body;
     // Insert the template data into the database
     $wpdb->insert(
-        "{$wpdb->prefix}epop_email_templates",
+        "{$wpdb->prefix}epop_templates",
         array(
             'template_name' => $template_name,
             'subject' => $subject,
