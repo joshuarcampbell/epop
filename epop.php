@@ -309,15 +309,15 @@ function epop_display_template_form($template = null) {
             <tbody>
                 <tr>
                     <th scope="row"><label for="name"><?php _e('Name', 'epop'); ?> *</label></th>
-                    <td><input name="name" type="text" id="name" value="<?php echo esc_attr($name); ?>" class="regular-text" requried></td>
+                    <td><input name="template_name" type="text" id="name" value="<?php echo esc_attr($name); ?>" class="regular-text" requried></td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="subject"><?php _e('Subject', 'epop'); ?> *</label></th>
-                    <td><input name="subject" type="text" id="subject" value="<?php echo esc_attr($subject); ?>" class="regular-text" required></td>
+                    <td><input name="template_subject" type="text" id="subject" value="<?php echo esc_attr($subject); ?>" class="regular-text" required></td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="body"><?php _e('Body', 'epop'); ?> *</label></th>
-                    <td><?php wp_editor($body, 'body', ['textarea_name' => 'body']); ?></td>
+                    <td><?php wp_editor($body, 'body', ['textarea_name' => 'template_body']); ?></td>
                 </tr>
             </tbody>
         </table>
