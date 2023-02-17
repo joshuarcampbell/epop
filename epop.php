@@ -305,7 +305,9 @@ function epop_display_template_form($template = null)
     
     // Render the form using HTML and PHP
     ?>
-    <form method="post">
+	<form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+    <input type="hidden" name="action" value="epop_save_template">
+    <?php wp_nonce_field('epop_save_template', 'epop_save_template'); ?>
         <table class="form-table">
             <tr>
                 <th><label for="name"><?php _e('Template Name', 'epop'); ?></label></th>
@@ -401,40 +403,35 @@ function epop_display_template_list() {
 
 // Save template data to database
 function epop_save_template() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'epop_templates';
+    if (isset($_POST['epop_save_template'])) {
 
-    $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-    $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
-    $message = isset($_POST['message']) ? wp_kses_post($_POST['message']) : '';
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        // Verify the nonce
+        if (!wp_verify_nonce($_POST['epop_save_template'], 'epop_save_template')) {
+            wp_die('Security check');
+        }
 
-    if (empty($name) || empty($subject) || empty($message)) {
-        wp_die('Please fill in all fields.');
-    }
+        // Sanitize input data
+        $template_name = sanitize_text_field($_POST['template_name']);
+        $template_subject = sanitize_text_field($_POST['template_subject']);
+        $template_message = sanitize_text_field($_POST['template_message']);
 
-    $data = array(
-        'name' => $name,
-        'subject' => $subject,
-        'message' => $message,
-    );
-
-    $format = array(
-        '%s',
-        '%s',
-        '%s'
-    );
-
-    if ($id > 0) {
-        $where = array('id' => $id);
-        $wpdb->update($table_name, $data, $where, $format, array('%d'));
-    } else {
+        // Save the template to the database
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'epop_templates';
+        $data = array(
+            'name' => $template_name,
+            'subject' => $template_subject,
+            'message' => $template_message,
+        );
+        $format = array('%s', '%s', '%s');
         $wpdb->insert($table_name, $data, $format);
-    }
 
-    wp_redirect(admin_url('admin.php?page=epop-templates'));
-    exit;
+        // Redirect to the templates page
+        wp_redirect(admin_url('admin.php?page=epop_templates'));
+        exit;
+    }
 }
+add_action('admin_post_epop_save_template', 'epop_save_template');
 
 
 
