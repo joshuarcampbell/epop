@@ -290,49 +290,44 @@ if ( isset( $_GET['action'] ) && $_GET['action'] === 'edit' && isset( $_GET['id'
  *
  * @param WP_Post|null $template The template being edited. If null, a new template is being added.
  */
-function epop_display_template_form($template = null)
-{
+function epop_display_template_form($template = null) {
+    // set defaults
     $name = '';
     $subject = '';
-    $content = '';
-    
-    // If editing an existing template, retrieve data from the database
+    $body = '';
+    $id = '';
+
     if ($template) {
         $name = $template->name;
         $subject = $template->subject;
-        $content = $template->content;
+        $body = $template->body;
+        $id = $template->id;
     }
-    
-    // Render the form using HTML and PHP
     ?>
-	<form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-    <input type="hidden" name="action" value="epop_save_template">
-    <?php wp_nonce_field('epop_save_template', 'epop_save_template'); ?>
+    <form method="post">
         <table class="form-table">
-            <tr>
-                <th><label for="name"><?php _e('Template Name', 'epop'); ?></label></th>
-                <td>
-                    <input type="text" name="name" id="name" value="<?php echo esc_attr($name); ?>" required>
-                </td>
-            </tr>
-            <tr>
-                <th><label for="subject"><?php _e('Subject', 'epop'); ?></label></th>
-                <td>
-                    <input type="text" name="subject" id="subject" value="<?php echo esc_attr($subject); ?>" required>
-                </td>
-            </tr>
-            <tr>
-                <th><label for="content"><?php _e('Content', 'epop'); ?></label></th>
-                <td>
-                    <?php wp_editor($content, 'content', array('textarea_rows' => 15)); ?>
-                </td>
-            </tr>
+            <tbody>
+                <tr>
+                    <th scope="row"><label for="name"><?php _e('Name', 'epop'); ?> *</label></th>
+                    <td><input name="name" type="text" id="name" value="<?php echo esc_attr($name); ?>" class="regular-text" requried></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="subject"><?php _e('Subject', 'epop'); ?> *</label></th>
+                    <td><input name="subject" type="text" id="subject" value="<?php echo esc_attr($subject); ?>" class="regular-text" required></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="body"><?php _e('Body', 'epop'); ?> *</label></th>
+                    <td><?php wp_editor($body, 'body', ['textarea_name' => 'body']); ?></td>
+                </tr>
+            </tbody>
         </table>
+        <input type="hidden" name="id" value="<?php echo esc_attr($id); ?>">
         <?php wp_nonce_field('epop_save_template', 'epop_template_nonce'); ?>
-        <?php submit_button(__('Save Template', 'epop')); ?>
+        <?php submit_button(__('Save', 'epop'), 'primary', 'submit_template'); ?>
     </form>
     <?php
-}
+} 
+
 
 
 
@@ -406,39 +401,27 @@ function epop_display_template_list() {
  * Save the template data when a template is added or updated
  */
 function epop_save_template() {
-  if (isset($_POST['epop_save_template'])) {
-    $id = isset($_POST['epop_template_id']) ? absint($_POST['epop_template_id']) : 0;
-    $name = isset($_POST['epop_template_name']) ? sanitize_text_field($_POST['epop_template_name']) : '';
-    $subject = isset($_POST['epop_template_subject']) ? sanitize_text_field($_POST['epop_template_subject']) : '';
-    $body = isset($_POST['epop_template_body']) ? wp_kses_post($_POST['epop_template_body']) : '';
+    global $wpdb;
 
-    // Validate template name
-    if (empty($name)) {
-      wp_die(__('Please enter a name for the template.'));
+    if (!current_user_can('manage_options')) {
+        return;
     }
 
-    // Save template data to database
-    $data = array(
-      'name' => $name,
-      'subject' => $subject,
-      'body' => $body,
-    );
+    if (isset($_POST['epop_template_name']) && isset($_POST['epop_template_subject']) && isset($_POST['epop_template_body'])) {
+        $template_name = sanitize_text_field($_POST['epop_template_name']);
+        $template_subject = sanitize_text_field($_POST['epop_template_subject']);
+        $template_body = wp_kses_post($_POST['epop_template_body']);
 
-    if ($id > 0) {
-      $result = epop_update_template($id, $data);
-      if ($result) {
-        wp_redirect(admin_url('admin.php?page=epop-templates&updated=true'));
-        exit;
-      }
-    } else {
-      $result = epop_insert_template($data);
-      if ($result) {
-        wp_redirect(admin_url('admin.php?page=epop-templates&added=true'));
-        exit;
-      }
+        $data = array(
+            'name' => $template_name,
+            'subject' => $template_subject,
+            'body' => $template_body,
+        );
+
+        $wpdb->insert($wpdb->prefix . 'epop_templates', $data, array('%s', '%s', '%s'));
     }
-  }
 }
+
 
 add_action('admin_post_epop_save_template', 'epop_save_template');
 
