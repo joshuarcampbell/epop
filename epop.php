@@ -402,35 +402,44 @@ function epop_display_template_list() {
 }
 
 // Save template data to database
+/**
+ * Save the template data when a template is added or updated
+ */
 function epop_save_template() {
-    if (isset($_POST['epop_save_template'])) {
+  if (isset($_POST['epop_save_template'])) {
+    $id = isset($_POST['epop_template_id']) ? absint($_POST['epop_template_id']) : 0;
+    $name = isset($_POST['epop_template_name']) ? sanitize_text_field($_POST['epop_template_name']) : '';
+    $subject = isset($_POST['epop_template_subject']) ? sanitize_text_field($_POST['epop_template_subject']) : '';
+    $body = isset($_POST['epop_template_body']) ? wp_kses_post($_POST['epop_template_body']) : '';
 
-        // Verify the nonce
-        if (!wp_verify_nonce($_POST['epop_save_template'], 'epop_save_template')) {
-            wp_die('Security check');
-        }
-
-        // Sanitize input data
-        $template_name = sanitize_text_field($_POST['template_name']);
-        $template_subject = sanitize_text_field($_POST['template_subject']);
-        $template_message = sanitize_text_field($_POST['template_message']);
-
-        // Save the template to the database
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'epop_templates';
-        $data = array(
-            'name' => $template_name,
-            'subject' => $template_subject,
-            'message' => $template_message,
-        );
-        $format = array('%s', '%s', '%s');
-        $wpdb->insert($table_name, $data, $format);
-
-        // Redirect to the templates page
-        wp_redirect(admin_url('admin.php?page=epop_templates'));
-        exit;
+    // Validate template name
+    if (empty($name)) {
+      wp_die(__('Please enter a name for the template.'));
     }
+
+    // Save template data to database
+    $data = array(
+      'name' => $name,
+      'subject' => $subject,
+      'body' => $body,
+    );
+
+    if ($id > 0) {
+      $result = epop_update_template($id, $data);
+      if ($result) {
+        wp_redirect(admin_url('admin.php?page=epop-templates&updated=true'));
+        exit;
+      }
+    } else {
+      $result = epop_insert_template($data);
+      if ($result) {
+        wp_redirect(admin_url('admin.php?page=epop-templates&added=true'));
+        exit;
+      }
+    }
+  }
 }
+
 add_action('admin_post_epop_save_template', 'epop_save_template');
 
 
