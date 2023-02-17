@@ -292,38 +292,46 @@ if ( isset( $_GET['action'] ) && $_GET['action'] === 'edit' && isset( $_GET['id'
  */
 function epop_display_template_form($template = null)
 {
+    $name = '';
+    $subject = '';
+    $content = '';
+    
+    // If editing an existing template, retrieve data from the database
     if ($template) {
-        $template_id = $template->id;
-        $template_name = $template->name;
-        $template_content = $template->content;
-        $submit_label = 'Update Template';
-    } else {
-        $template_id = '';
-        $template_name = '';
-        $template_content = '';
-        $submit_label = 'Add Template';
+        $name = $template->name;
+        $subject = $template->subject;
+        $content = $template->content;
     }
+    
+    // Render the form using HTML and PHP
     ?>
-    <div class="wrap">
-        <h2><?php echo $submit_label; ?></h2>
-        <form method="post" action="">
-            <input type="hidden" name="template_id" value="<?php echo $template_id; ?>">
-            <table class="form-table">
-                <tr valign="top">
-                    <th scope="row">Name</th>
-                    <td><input type="text" name="template_name" value="<?php echo $template_name; ?>" size="50"></td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Content</th>
-                    <td><textarea name="template_content" cols="80" rows="10"><?php echo $template_content; ?></textarea></td>
-                </tr>
-            </table>
-            <?php wp_nonce_field('epop_save_template', 'epop_template_nonce'); ?>
-            <?php submit_button($submit_label, 'primary', 'submit_template'); ?>
-        </form>
-    </div>
+    <form method="post">
+        <table class="form-table">
+            <tr>
+                <th><label for="name"><?php _e('Template Name', 'epop'); ?></label></th>
+                <td>
+                    <input type="text" name="name" id="name" value="<?php echo esc_attr($name); ?>" required>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="subject"><?php _e('Subject', 'epop'); ?></label></th>
+                <td>
+                    <input type="text" name="subject" id="subject" value="<?php echo esc_attr($subject); ?>" required>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="content"><?php _e('Content', 'epop'); ?></label></th>
+                <td>
+                    <?php wp_editor($content, 'content', array('textarea_rows' => 15)); ?>
+                </td>
+            </tr>
+        </table>
+        <?php wp_nonce_field('epop_save_template', 'epop_template_nonce'); ?>
+        <?php submit_button(__('Save Template', 'epop')); ?>
+    </form>
     <?php
 }
+
 
 
 
@@ -396,22 +404,38 @@ function epop_save_template() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'epop_templates';
 
-    $template_name = sanitize_text_field($_POST['template_name']);
-    $subject = sanitize_text_field($_POST['subject']);
-    $body = wp_kses_post($_POST['body']);
+    $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
+    $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
+    $message = isset($_POST['message']) ? wp_kses_post($_POST['message']) : '';
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+
+    if (empty($name) || empty($subject) || empty($message)) {
+        wp_die('Please fill in all fields.');
+    }
 
     $data = array(
-        'template_name' => $template_name,
+        'name' => $name,
         'subject' => $subject,
-        'body' => $body
+        'message' => $message,
     );
 
-    if ($_POST['template_id']) {
-        $wpdb->update($table_name, $data, array('id' => $_POST['template_id']));
+    $format = array(
+        '%s',
+        '%s',
+        '%s'
+    );
+
+    if ($id > 0) {
+        $where = array('id' => $id);
+        $wpdb->update($table_name, $data, $where, $format, array('%d'));
     } else {
-        $wpdb->insert($table_name, $data);
+        $wpdb->insert($table_name, $data, $format);
     }
+
+    wp_redirect(admin_url('admin.php?page=epop-templates'));
+    exit;
 }
+
 
 
 function epop_add_template() {
