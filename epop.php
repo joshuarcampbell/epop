@@ -304,7 +304,7 @@ function epop_display_template_form($template = null) {
         $id = $template->id;
     }
     ?>
-    <form method="post">
+    <form method="post" action="admin-post.php">
         <table class="form-table">
             <tbody>
                 <tr>
@@ -407,37 +407,27 @@ function epop_nonce_verification($action = 'epop_save_template') {
 /**
  * Save the template data when a template is added or updated
  */
-function epop_save_template()
-{
+function epop_save_template($template_data) {
     global $wpdb;
-    
-    if (isset($_POST['submit'])) {
-        
-        $template_id = isset($_POST['template_id']) ? $_POST['template_id'] : '';
-        $name = isset($_POST['template_name']) ? $_POST['template_name'] : '';
-        $subject = isset($_POST['template_subject']) ? $_POST['template_subject'] : '';
-        $body = isset($_POST['template_body']) ? $_POST['template_body'] : '';
-        
-        if (empty($name) || empty($subject) || empty($body)) {
-            echo "Name, Subject, and Body fields are required.";
-            return;
-        }
-        
-        $data = array(
-            'name' => $name,
-            'subject' => $subject,
-            'body' => $body
-        );
-        
-        if (!empty($template_id)) {
-            $wpdb->update($wpdb->prefix . 'epop_email_templates', $data, array('id' => $template_id));
-        } else {
-            $wpdb->insert($wpdb->prefix . 'epop_email_templates', $data);
-        }
-        
-        echo "Template saved.";
+
+    // Check if a template with the same name already exists
+    $template_exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . $wpdb->prefix . "epop_templates WHERE name=%s", $template_data['name']));
+
+    // If the template already exists, update it. Otherwise, insert a new one.
+    if ($template_exists) {
+        $wpdb->update($wpdb->prefix . 'epop_templates', array(
+            'subject' => $template_data['subject'],
+            'body' => $template_data['body'],
+        ), array('name' => $template_data['name']));
+    } else {
+        $wpdb->insert($wpdb->prefix . 'epop_templates', array(
+            'name' => $template_data['name'],
+            'subject' => $template_data['subject'],
+            'body' => $template_data['body'],
+        ));
     }
 }
+
 
 
 
